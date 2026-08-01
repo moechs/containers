@@ -7,13 +7,13 @@ ARG DOWNLOADS_URL="https://downloads.bitnami.com/files/stacksmith"
 ARG TARGETARCH
 
 LABEL org.opencontainers.image.base.name="docker.io/bitnami/minideb:bookworm" \
-      org.opencontainers.image.created="2026-08-01T01:56:32Z" \
+      org.opencontainers.image.created="2026-07-31T22:30:48Z" \
       org.opencontainers.image.description="Application packaged by Broadcom, Inc." \
-      org.opencontainers.image.documentation="https://github.com/bitnami/containers/tree/main/bitnami/grafana-image-renderer/README.md" \
-      org.opencontainers.image.source="https://github.com/bitnami/containers/tree/main/bitnami/grafana-image-renderer" \
-      org.opencontainers.image.title="grafana-image-renderer" \
+      org.opencontainers.image.documentation="https://github.com/bitnami/containers/tree/main/bitnami/mysql/README.md" \
+      org.opencontainers.image.source="https://github.com/bitnami/containers/tree/main/bitnami/mysql" \
+      org.opencontainers.image.title="mysql" \
       org.opencontainers.image.vendor="Broadcom, Inc." \
-      org.opencontainers.image.version="5.10.3"
+      org.opencontainers.image.version="26.7.0"
 
 ENV HOME="/" \
     OS_ARCH="${TARGETARCH:-amd64}" \
@@ -23,13 +23,13 @@ ENV HOME="/" \
 COPY prebuildfs /
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 # Install required system packages and dependencies
-RUN install_packages ca-certificates chromium curl fonts-freefont-ttf fonts-ipafont-gothic fonts-kacst fonts-thai-tlwg fonts-wqy-zenhei gnupg jq libbz2-1.0 libffi8 liblzma5 libncursesw6 libnss3-tools libreadline8 libsqlite3-0 libssl3 libtinfo6 libx11-xcb1 libxcb-dri3-0 libxshmfence1 libxss1 libxtst6 procps wget zlib1g
+RUN install_packages ca-certificates curl gcc-11 libaio1 libbrotli1 libcom-err2 libcurl4 libffi8 libgcc-s1 libgmp10 libgnutls30 libgssapi-krb5-2 libhogweed6 libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap-2.5-0 libnettle8 libnghttp2-14 libp11-kit0 libpsl5 librtmp1 libsasl2-2 libssh2-1 libssl3 libstdc++6 libtasn1-6 libtinfo6 libtirpc3 libudev1 libunistring2 libzstd1 procps psmisc
 RUN --mount=type=secret,id=downloads_url,env=SECRET_DOWNLOADS_URL \
     DOWNLOADS_URL=${SECRET_DOWNLOADS_URL:-${DOWNLOADS_URL}} ; \
     mkdir -p /tmp/bitnami/pkg/cache/ ; cd /tmp/bitnami/pkg/cache/ || exit 1 ; \
     COMPONENTS=( \
-      "python-3.14.6-8-linux-${OS_ARCH}-debian-12" \
-      "grafana-image-renderer-5.10.3-0-linux-${OS_ARCH}-debian-12" \
+      "ini-file-1.4.9-13-linux-${OS_ARCH}-debian-12" \
+      "mysql-26.7.0-0-linux-${OS_ARCH}-debian-12" \
     ) ; \
     for COMPONENT in "${COMPONENTS[@]}"; do \
       if [ ! -f "${COMPONENT}.tar.gz" ]; then \
@@ -44,19 +44,18 @@ RUN apt-get update && apt-get upgrade -y && \
     apt-get clean && rm -rf /var/lib/apt/lists /var/cache/apt/archives
 RUN chmod g+rwX /opt/bitnami
 RUN find / -perm /6000 -type f -exec chmod a-s {} \; || true
+RUN mkdir /docker-entrypoint-initdb.d /docker-entrypoint-startdb.d
 RUN uninstall_packages curl
 
 COPY rootfs /
-ENV APP_VERSION="5.10.3" \
-    BITNAMI_APP_NAME="grafana-image-renderer" \
-    HTTP_HOST="0.0.0.0" \
-    HTTP_PORT="8080" \
-    IMAGE_REVISION="1" \
-    PATH="/opt/bitnami/python/bin:/opt/bitnami/grafana-image-renderer/bin:$PATH"
+RUN /opt/bitnami/scripts/mysql/postunpack.sh
+ENV APP_VERSION="26.7.0" \
+    BITNAMI_APP_NAME="mysql" \
+    IMAGE_REVISION="0" \
+    PATH="/opt/bitnami/common/bin:/opt/bitnami/mysql/bin:/opt/bitnami/mysql/sbin:$PATH"
 
-EXPOSE 8080
+EXPOSE 3306
 
-WORKDIR /opt/bitnami/grafana-image-renderer
 USER 1001
-ENTRYPOINT [ "/opt/bitnami/scripts/grafana-image-renderer/entrypoint.sh" ]
-CMD [ "server" ]
+ENTRYPOINT [ "/opt/bitnami/scripts/mysql/entrypoint.sh" ]
+CMD [ "/opt/bitnami/scripts/mysql/run.sh" ]
