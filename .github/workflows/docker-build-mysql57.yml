@@ -38,8 +38,7 @@ jobs:
             rev="$(sed -n 's/^ARG IMAGE_REVISION=//p' "$f" | head -1)"
             [ -n "$ver" ] && [ -n "$rev" ] || { echo "cannot parse version from $f"; exit 1; }
             minor="${ver%.*}"
-            major="${ver%%.*}"
-            tags="${ver}-${os}-r${rev} ${ver} ${minor} ${major}"
+            tags="${ver}-${os}-r${rev} ${ver} ${minor}"
             items+=("$(jq -cn --arg d "$f" --arg c "$dir" --arg s "$os" --arg t "$tags" \
               '{dockerfile:$d, context:$c, slug:$s, tags:$t}')")
           done < <(find "bitnami/${PROJECT_DIR}" -name Dockerfile | sort)
