@@ -1,7 +1,7 @@
 name: Sync from upstream
 on:
   schedule:
-    - cron: '0 21 * * *'
+    - cron: '21 21 * * 3'
   workflow_dispatch:
 
 jobs:
